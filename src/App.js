@@ -1,20 +1,9 @@
 import React, { Component } from 'react';
 import './App.css';
 
-import BookItem from './BookItem';
-import AddBook from './AddBook';
-//import {fetchBooks, requestApiKey} from './api.js';
+import BookItem from './component/BookItem';
+import AddBook from './component/AddBook.js';
 
-const books = [
-  {
-    title: 'something title',
-    author: 'someone wrote this'
-  },
-  {
-    title: 'some other title',
-    author: 'some other author'
-  }
-];
 
 const apiKey = localStorage.getItem('firstKey');
 
@@ -29,51 +18,66 @@ const getFirstKey = () => {
   }
 };
 
-localStorage.setItem('books', JSON.stringify(books));
+
 
 class App extends Component {
   constructor(props) {
     super(props)
 
     this.state = {
-      books: JSON.parse(localStorage.getItem('books'),
-        'title',
-        'author'),
-      limit: 10
+      books: [],
+      limit: 10,
+      success: false
+
+
     };
-    this.onDelete = this.onDelete.bind(this);
-    this.onAdd = this.onAdd.bind(this);
-    this.onEditSubmit = this.onEditSubmit.bind(this);
+
+    //this.onDelete = this.onDelete.bind(this);
+    //this.onAdd = this.onAdd.bind(this);
+    //this.onEditSubmit = this.onEditSubmit.bind(this);
   }
-  componentWillMount() {
-    this.getBooks();
-    this.setState({ books });
-  }
+
 
   componentDidMount() {
 
-    getFirstKey();
-    console.log(localStorage.getItem('firstKey'));
+  getFirstKey();
+  console.log(localStorage.getItem('firstKey'));
   }
 
-  getBooks() {
-    return this.state.books;
+  getBooks =() => {
+    fetch(`https://www.forverkliga.se/JavaScript/api/crud.php?op=select&key=${apiKey}`)
+        .then(response => response.json())
+        .then((data) => {
+            if (data.status !== "success" && this.state.limit > 0) {
+                this.setState({count: this.state.limit - 1});
+                this.getBooks();
+            } else if (this.state.limit > 0 ) {
+                this.setState({success: true});
+                this.setState({books: data.data});
+            }
+        });
+
   }
 
-  onAdd(title, author) {
-    const books = this.getBooks();
+  onAdd = (title, author) => {
+    if (this.state.success) {
+        this.setState({success: false, limit: 10});
+    }
 
     fetch(`https://www.forverkliga.se/JavaScript/api/crud.php?op=insert&key=${apiKey}&title=${title}&author=${author}`)
       .then(response => response.json())
       .then(data => {
-        if (data.status && this.state.limit >= 10) {
-          this.onAdd(title, author);
-          this.setState({ books });
-          books.push({ title, author });
+        if (data.status !== "success" && this.state.limit >= 10) {
+          this.addBook(title, author);
           this.setState({ limit: this.state.limit - 1 });
-        } else {
-          console.log('something went poopy');
+        }else if (this.state.limit >= 10) {
+          this.setState({success: true});
+          this.getBooks();
+
         }
+        // else {
+        //   console.log('something went poopy');
+        // }
       })
   }
 
@@ -107,7 +111,7 @@ class App extends Component {
         {this.state.books.map(book => {
           return (
             <BookItem
-              key={book.title}
+              key={book.id}
               {...book}
               onDelete={this.onDelete}
               onEditSubmit={this.onEditSubmit}
