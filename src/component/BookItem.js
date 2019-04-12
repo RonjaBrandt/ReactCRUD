@@ -16,8 +16,8 @@ class BookItem extends Component {
     }
 
     onDelete() {
-        const { onDelete, title } = this.props;
-        onDelete(title);
+        const { onDelete, id } = this.props;
+        onDelete(id);
     }
 
     onEdit() {

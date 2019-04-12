@@ -28,8 +28,6 @@ class App extends Component {
       books: [],
       limit: 10,
       success: false
-
-
     };
 
     //this.onDelete = this.onDelete.bind(this);
@@ -40,7 +38,8 @@ class App extends Component {
 
   componentDidMount() {
 
-  getFirstKey();
+    getFirstKey();
+    this.getBooks();
   console.log(localStorage.getItem('firstKey'));
   }
 
@@ -49,7 +48,7 @@ class App extends Component {
         .then(response => response.json())
         .then((data) => {
             if (data.status !== "success" && this.state.limit > 0) {
-                this.setState({count: this.state.limit - 1});
+                this.setState({limit: this.state.limit - 1});
                 this.getBooks();
             } else if (this.state.limit > 0 ) {
                 this.setState({success: true});
@@ -67,10 +66,10 @@ class App extends Component {
     fetch(`https://www.forverkliga.se/JavaScript/api/crud.php?op=insert&key=${apiKey}&title=${title}&author=${author}`)
       .then(response => response.json())
       .then(data => {
-        if (data.status !== "success" && this.state.limit >= 10) {
-          this.addBook(title, author);
+        if (data.status !== "success" && this.state.limit > 0) {
+          this.onAdd(title, author);
           this.setState({ limit: this.state.limit - 1 });
-        }else if (this.state.limit >= 10) {
+        }else if (this.state.limit > 0) {
           this.setState({success: true});
           this.getBooks();
 
@@ -81,12 +80,31 @@ class App extends Component {
       })
   }
 
-  onDelete(title) {
-    const books = this.getBooks();
-    const filteredBooks = books.filter(book => {
-      return book.title !== title;
-    });
-    this.setState({ books: filteredBooks });
+  onDelete=(id)=> {
+    if (this.state.success) {
+        this.setState({success: false, limit: 10});
+    }
+
+
+    fetch(`https://www.forverkliga.se/JavaScript/api/crud.php?op=delete&key=${apiKey}&id=${id}`)
+        .then(resp => resp.json())
+        .then((data) => {
+            if (data.status !== "success" && this.state.limit > 0) {
+                this.setState({limit: this.state.limit -1});
+                this.onDelete(id);
+            } else if (this.state.limit > 0) {
+                this.setState({success: true});
+                this.getBooks();
+            }
+        });
+
+
+
+    // const books = this.getBooks();
+    // const filteredBooks = books.filter(book => {
+    //   return book.title !== title;
+    // });
+    // this.setState({ books: filteredBooks });
   }
 
   onEditSubmit(title, author, originalTitle) {
