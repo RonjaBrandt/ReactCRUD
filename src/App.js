@@ -74,9 +74,6 @@ class App extends Component {
           this.getBooks();
 
         }
-        // else {
-        //   console.log('something went poopy');
-        // }
       })
   }
 
@@ -97,16 +94,8 @@ class App extends Component {
                 this.getBooks();
             }
         });
-
-
-
-    // const books = this.getBooks();
-    // const filteredBooks = books.filter(book => {
-    //   return book.title !== title;
-    // });
-    // this.setState({ books: filteredBooks });
   }
-
+////Fungerar inte 
   onEditSubmit(title, author, originalTitle) {
     let books = this.getBooks();
     books = books.map(book => {
