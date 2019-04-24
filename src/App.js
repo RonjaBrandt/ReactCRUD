@@ -66,7 +66,14 @@ class App extends Component {
     fetch(`https://www.forverkliga.se/JavaScript/api/crud.php?op=insert&key=${apiKey}&title=${title}&author=${author}`)
       .then(response => response.json())
       .then(data => {
-        if (data.status !== "success" && this.state.limit > 0) {
+        // Här saknas ett villkor för när requestet lyckats där ni med fördel
+        // kan lägg till boken direkt i statet istället för att hämta om hela listan igen
+        // Skulle kunna se ut såhär
+        if (data.status === "success") {
+          this.setState({
+            books: [...this.state.books, { id: data.id, title, author }]
+          })
+        } else if (data.status !== "success" && this.state.limit > 0) {
           this.onAdd(title, author);
           this.setState({ limit: this.state.limit - 1 });
         }else if (this.state.limit > 0) {
@@ -86,7 +93,14 @@ class App extends Component {
     fetch(`https://www.forverkliga.se/JavaScript/api/crud.php?op=delete&key=${apiKey}&id=${id}`)
         .then(resp => resp.json())
         .then((data) => {
-            if (data.status !== "success" && this.state.limit > 0) {
+          // Här saknas ett villkor för när requestet lyckats där ni med fördel
+          // kan ta bort boken direkt i statet istället för att hämta om hela listan igen
+          // Skulle kunna se ut såhär
+            if (data.status === "success") {
+              this.setState({
+                books: this.state.books.filter(book => book.id !== id)
+              })
+            } else if (data.status !== "success" && this.state.limit > 0) {
                 this.setState({limit: this.state.limit -1});
                 this.onDelete(id);
             } else if (this.state.limit > 0) {
@@ -95,10 +109,15 @@ class App extends Component {
             }
         });
   }
-////Fungerar inte 
-  onEditSubmit(title, author, originalTitle) {
+////Fungerar inte --- Eftersom den här funktionen inte hade bundit kontexten för this till klassen
+  // Genom att konvertera den till en arrow-function åstadkommer vi detta
+  // De andra metoderna i klassen är redan arrow-functions
+  onEditSubmit = (title, author, originalTitle) => {
+    // getBooks returnerar ingenting därför är books undefined
     let books = this.getBooks();
-    books = books.map(book => {
+    // Eftersom books är undefined och inte en array så blir det fel när en funktion som inte finns försöker köras
+    console.log(this.state.books)
+    books = this.state.books.map(book => {
       if (book.title === originalTitle) {
         book.title = title;
         book.author = author;
